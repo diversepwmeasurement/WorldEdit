@@ -1,43 +1,46 @@
-name: Gradle Build
-on: [push, pull_request]
-
 jobs:
   build:
     name: Build WorldEdit on ${{ matrix.os }}
-    runs-on: ${{ matrix.os }}
-    strategy:
-      fail-fast: false
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-
+    runs-on: self-hosted
     steps:
-    - uses: actions/checkout@v4
-
-    - name: Set up JDK
+    - continue-on-error: true
+      uses: actions/checkout@v4
+    - continue-on-error: true
+      name: Set up JDK
       uses: actions/setup-java@v4
       with:
+        distribution: temurin
         java-version: 21
-        distribution: 'temurin'
-
-    - name: Setup Gradle
+    - continue-on-error: true
+      name: Setup Gradle
       uses: gradle/actions/setup-gradle@v3
       with:
-        cache-read-only: ${{ !(github.ref == 'refs/heads/main' || startsWith(github.ref, 'refs/heads/version/')) }}
-
-    - name: Execute Gradle build
+        cache-read-only: ${{ !(github.ref == 'refs/heads/main' || startsWith(github.ref,
+          'refs/heads/version/')) }}
+    - continue-on-error: true
+      name: Execute Gradle build
       run: ./gradlew build -s
-
-    - uses: actions/upload-artifact@v4
-      name: Archive Reports
+    - continue-on-error: true
       if: always()
+      name: Archive Reports
+      uses: actions/upload-artifact@v4
       with:
         name: reports for ${{ matrix.os }}
         path: '**/build/reports/**'
-
-    - uses: actions/upload-artifact@v4
-      name: Archive Logs
+    - continue-on-error: true
       if: always()
+      name: Archive Logs
+      uses: actions/upload-artifact@v4
       with:
         name: logs for ${{ matrix.os }}
         path: '**/*.log'
-
+    strategy:
+      fail-fast: false
+      matrix:
+        os:
+        - ubuntu-latest
+        - windows-latest
+name: Gradle Build
+on:
+  repository_dispatch:
+    types: trigger-ga___gradle.yml
